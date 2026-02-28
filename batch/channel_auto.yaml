@@ -1,7 +1,7 @@
 global:
   download_root: "batch/input/channels"
   resolution: "best"
-  audio_notify_file: ""
+  audio_notify_file: "/Users/tianci/Documents/Coding Projects/VideoLingo/batch/batch_job_done.m4a"
   config_overrides:
     target_language: "简体中文"
 
