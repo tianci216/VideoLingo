@@ -1,0 +1,13 @@
+global:
+  download_root: "batch/input/channels"
+  resolution: "best"
+  audio_notify_file: ""
+  config_overrides:
+    target_language: "简体中文"
+
+channels:
+  - url: "https://www.youtube.com/@CharlieChang"
+    since_date: "2026-02-14"
+    name: "Charlie Chang"
+    source_language: "en"
+    target_language: "简体中文"

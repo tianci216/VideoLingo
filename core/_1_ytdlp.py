@@ -23,6 +23,16 @@ def update_ytdlp():
     from yt_dlp import YoutubeDL
     return YoutubeDL
 
+def apply_cookie_settings(ydl_opts):
+    # Priority: explicit cookie file from config.yaml -> Chrome browser cookies.
+    cookies_path = load_key("youtube.cookies_path")
+    if cookies_path and os.path.exists(cookies_path):
+        ydl_opts["cookiefile"] = str(cookies_path)
+        rprint(f"[green]Using YouTube cookie file: {cookies_path}[/green]")
+    else:
+        ydl_opts["cookiesfrombrowser"] = ("chrome",)
+        rprint("[green]Using Chrome cookies by default for YouTube download[/green]")
+
 def download_video_ytdlp(url, save_path='output', resolution='1080'):
     os.makedirs(save_path, exist_ok=True)
     ydl_opts = {
@@ -33,10 +43,8 @@ def download_video_ytdlp(url, save_path='output', resolution='1080'):
         'postprocessors': [{'key': 'FFmpegThumbnailsConvertor', 'format': 'jpg'}],
     }
 
-    # Read Youtube Cookie File
-    cookies_path = load_key("youtube.cookies_path")
-    if os.path.exists(cookies_path):
-        ydl_opts["cookiefile"] = str(cookies_path)
+    # Apply cookie settings (file first, then Chrome cookies by default).
+    apply_cookie_settings(ydl_opts)
 
     # Get YoutubeDL class after updating
     YoutubeDL = update_ytdlp()

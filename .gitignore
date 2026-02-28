@@ -125,6 +125,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.vscode/
+.config.yaml
 
 # Spyder project settings
 .spyderproject
@@ -167,6 +169,8 @@ batch/tasks_setting.xlsx
 .DS_Store
 AllinOne.ipynb
 config.backup.yaml
+/config.yaml
+/config.ymal
 
 # runtime
 runtime/

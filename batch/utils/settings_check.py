@@ -10,11 +10,29 @@ VALID_DUBBING_VALUES = [0, 1]
 
 console = Console()
 
+def normalize_rel(path):
+    return str(path).replace("\\", "/")
+
+def collect_input_files_recursive():
+    files = set()
+    for root, _, filenames in os.walk(INPUT_FOLDER):
+        for name in filenames:
+            rel = os.path.relpath(os.path.join(root, name), INPUT_FOLDER)
+            files.add(normalize_rel(rel))
+    return files
+
 def check_settings():
     os.makedirs(INPUT_FOLDER, exist_ok=True)
     df = pd.read_excel(SETTINGS_FILE)
-    input_files = set(os.listdir(INPUT_FOLDER))
-    excel_files = set(df['Video File'].tolist())
+    input_files = collect_input_files_recursive()
+    excel_files = set()
+    for item in df['Video File'].tolist():
+        if pd.isna(item):
+            continue
+        item = normalize_rel(str(item).strip())
+        if item.startswith('http'):
+            continue
+        excel_files.add(item)
     files_not_in_excel = input_files - excel_files
 
     all_passed = True
@@ -31,8 +49,14 @@ def check_settings():
 
     for index, row in df.iterrows():
         video_file = row['Video File']
-        source_language = row['Source Language']
         dubbing = row['Dubbing']
+
+        if pd.isna(video_file):
+            console.print(Panel("Video File is empty", title=f"[bold red]Error in row {index + 2}", expand=False))
+            all_passed = False
+            continue
+
+        video_file = normalize_rel(str(video_file).strip())
 
         if video_file.startswith('http'):
             url_tasks += 1

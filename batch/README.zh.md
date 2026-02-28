@@ -17,7 +17,7 @@
 
 | 字段 | 说明 | 可选值 |
 |------|------|--------|
-| Video File | 视频文件名（无需 `input/` 前缀）或 YouTube 链接 | - |
+| Video File | 视频文件名/路径（无需 `input/` 前缀）或 YouTube 链接 | - |
 | Source Language | 源语言 | 'en', 'zh', ... 或留空使用默认设置 |
 | Target Language | 翻译语言 | 使用自然语言描述，或留空使用默认设置 |
 | Dubbing | 是否配音 | 0 或留空：不配音；1：配音 |
@@ -28,6 +28,7 @@
 |------------|-----------------|-----------------|---------|
 | https://www.youtube.com/xxx | | German | |
 | Kungfu Panda.mp4 | |  | 1 |
+| channels/my_channel/video.mp4 | en | French | 0 |
 
 ### 3. 运行批处理
 
@@ -36,6 +37,48 @@
 3. 任务状态可在 `tasks_setting.xlsx` 的 `Status` 列查看
 
 > 注意在运行时保持 `tasks_setting.xlsx` 关闭，否则会因占用无法写入而中断。
+
+## 频道自动模式（单命令）
+
+该模式可实现：
+- 按配置抓取 YouTube 频道视频列表，
+- 仅下载缺失视频（自动跳过已下载），
+- 按频道目录组织视频，
+- 自动触发批量字幕翻译流程。
+
+### 1. 配置频道
+
+编辑 `batch/channel_auto.yaml`：
+
+```yaml
+global:
+  download_root: "batch/input/channels"
+  resolution: "best"
+  audio_notify_file: ""
+  config_overrides:
+    target_language: "简体中文"
+
+channels:
+  - url: "https://www.youtube.com/@example/videos"
+    since_date: "2025-01-01"
+    name: "example"
+    source_language: "en"
+    target_language: "简体中文"
+```
+
+说明：
+- `since_date` 为必填，格式为 `YYYY-MM-DD`
+- 视频会保存到 `batch/input/channels/<channel_name>/`
+- 下载跳过状态保存在 `batch/state/download_archive/`
+
+### 2. 一键运行
+
+- macOS/Linux：`./OneKeyChannelBatch.sh`
+- Windows：`OneKeyChannelBatch.bat`
+
+两个脚本都会激活 conda 环境 `videolingo` 并执行：
+
+`python -m batch.utils.channel_auto_pipeline --config batch/channel_auto.yaml`
 
 ## 注意事项
 

@@ -81,9 +81,13 @@ def process_input_file(file):
         _1_ytdlp.download_video_ytdlp(file, resolution=load_key(YTB_RESOLUTION_KEY))
         video_file = _1_ytdlp.find_video_files()
     else:
-        input_file = os.path.join('batch', 'input', file)
-        output_file = os.path.join(OUTPUT_DIR, file)
-        shutil.copy(input_file, output_file)
+        rel_file = file.replace("\\", "/")
+        input_file = os.path.join('batch', 'input', rel_file)
+        if not os.path.isfile(input_file):
+            raise FileNotFoundError(f"Input file not found: {input_file}")
+        # Keep output flat to satisfy downstream single-video checkpoint logic.
+        output_file = os.path.join(OUTPUT_DIR, os.path.basename(rel_file))
+        shutil.copy2(input_file, output_file)
         video_file = output_file
     return {'video_file': video_file}
 
