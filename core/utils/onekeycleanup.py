@@ -3,6 +3,8 @@ import glob
 from core._1_ytdlp import find_video_files
 import shutil
 
+VIDEO_EXTS = ('.mp4', '.mov', '.avi', '.mkv', '.flv', '.wmv', '.webm')
+
 def cleanup(history_dir="history"):
     # Get video file name
     video_file = find_video_files()
@@ -30,6 +32,9 @@ def cleanup(history_dir="history"):
     # Move gpt_log files
     for file in glob.glob("output/gpt_log/*"):
         move_file(file, gpt_log_dir)
+
+    # Normalize final media naming for easier downstream usage.
+    ensure_standard_video_name(video_history_dir)
 
     # Delete empty output directories
     try:
@@ -68,6 +73,44 @@ def move_file(src, dst):
     except Exception as e:
         print(f"❌ Move failed: {src} -> {dst}")
         print(f"Error message: {str(e)}")
+
+def ensure_standard_video_name(video_history_dir):
+    """
+    Ensure the folder has a canonical media filename `video.mp4`.
+    Priority:
+    1) output_sub.mp4 (subtitle-burned video)
+    2) first discovered .mp4 file
+    """
+    canonical = os.path.join(video_history_dir, "video.mp4")
+    if os.path.exists(canonical):
+        return
+
+    preferred = os.path.join(video_history_dir, "output_sub.mp4")
+    if os.path.isfile(preferred):
+        os.rename(preferred, canonical)
+        print(f"✅ Renamed: {preferred} -> {canonical}")
+        return
+
+    mp4_files = [
+        os.path.join(video_history_dir, name)
+        for name in os.listdir(video_history_dir)
+        if os.path.isfile(os.path.join(video_history_dir, name))
+        and name.lower().endswith(".mp4")
+        and name.lower() != "video.mp4"
+    ]
+    if mp4_files:
+        os.rename(mp4_files[0], canonical)
+        print(f"✅ Renamed: {mp4_files[0]} -> {canonical}")
+        return
+
+    # Keep original names if no mp4 output exists (e.g. early failures).
+    available_media = [
+        name for name in os.listdir(video_history_dir)
+        if os.path.isfile(os.path.join(video_history_dir, name))
+        and os.path.splitext(name)[1].lower() in VIDEO_EXTS
+    ]
+    if available_media:
+        print(f"⚠️ No mp4 media found for canonical naming in {video_history_dir}. Kept original media names.")
 
 def sanitize_filename(filename):
     # Remove or replace disallowed characters
